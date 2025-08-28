@@ -22,7 +22,7 @@ public enum ErrorCode {
     INVALID_LOCATION(HttpStatus.BAD_REQUEST, "위치 정보가 올바르지 않습니다."),
     INVALID_START_DATE(HttpStatus.BAD_REQUEST, "시작일은 오늘 이후여야 합니다."),
     INVALID_BOUNDING_BOX(HttpStatus.BAD_REQUEST, "잘못된 지도 경계값입니다."),
-
+    INVALID_AGE_BUCKET(HttpStatus.BAD_REQUEST,"연령은 10단위(예: 20, 30, 40)만 허용합니다."),
     // 401 UNAUTHORIZED
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
