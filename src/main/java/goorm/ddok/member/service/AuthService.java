@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -149,8 +150,8 @@ public class AuthService {
         LocationResponse location = null;
         if (user.getLocation() != null) {
             var loc = user.getLocation();
-            Double lat = (loc.getActivityLatitude()  != null) ? loc.getActivityLatitude().doubleValue()  : null;
-            Double lon = (loc.getActivityLongitude() != null) ? loc.getActivityLongitude().doubleValue() : null;
+            BigDecimal lat = (loc.getActivityLatitude()  != null) ? loc.getActivityLatitude()  : null;
+            BigDecimal lon = (loc.getActivityLongitude() != null) ? loc.getActivityLongitude() : null;
 
             String address = loc.getRoadName();
             location = new LocationResponse(lat, lon, address);
@@ -418,10 +419,10 @@ public class AuthService {
     private PreferenceResponse buildPreferenceResponse(User user, UserLocation userLocation, PreferenceRequest request) {
         LocationResponse locationResponse = null;
         if (userLocation != null) {
-            Double lat = (userLocation.getActivityLatitude() != null)
-                    ? userLocation.getActivityLatitude().doubleValue() : null;
-            Double lon = (userLocation.getActivityLongitude() != null)
-                    ? userLocation.getActivityLongitude().doubleValue() : null;
+            BigDecimal lat = (userLocation.getActivityLatitude() != null)
+                    ? userLocation.getActivityLatitude() : null;
+            BigDecimal lon = (userLocation.getActivityLongitude() != null)
+                    ? userLocation.getActivityLongitude() : null;
             locationResponse = new LocationResponse(lat, lon, userLocation.getRoadName());
         }
 

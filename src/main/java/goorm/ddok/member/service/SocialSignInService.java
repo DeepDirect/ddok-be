@@ -12,6 +12,8 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 @Service
 @RequiredArgsConstructor
 public class SocialSignInService {
@@ -57,8 +59,8 @@ public class SocialSignInService {
         LocationResponse location = null;
         if (user.getLocation() != null) {
             var loc = user.getLocation();
-            Double lat = (loc.getActivityLatitude()  != null) ? loc.getActivityLatitude().doubleValue()  : null;
-            Double lon = (loc.getActivityLongitude() != null) ? loc.getActivityLongitude().doubleValue() : null;
+            BigDecimal lat = (loc.getActivityLatitude()  != null) ? loc.getActivityLatitude()  : null;
+            BigDecimal lon = (loc.getActivityLongitude() != null) ? loc.getActivityLongitude() : null;
             String address = loc.getRoadName();
             location = new LocationResponse(lat, lon, address);
         }

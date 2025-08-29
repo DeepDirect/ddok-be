@@ -2,6 +2,8 @@ package goorm.ddok.member.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.math.BigDecimal;
+
 @Schema(
         name = "LocationResponse",
         description = "사용자 위치 정보 응답 DTO",
@@ -23,7 +25,7 @@ public record LocationResponse(
                 format = "double",
                 accessMode = Schema.AccessMode.READ_ONLY
         )
-        Double latitude,
+        BigDecimal latitude,
 
         @Schema(
                 description = "경도",
@@ -34,7 +36,7 @@ public record LocationResponse(
                 format = "double",
                 accessMode = Schema.AccessMode.READ_ONLY
         )
-        Double longitude,
+        BigDecimal longitude,
 
         @Schema(
                 description = "주소",

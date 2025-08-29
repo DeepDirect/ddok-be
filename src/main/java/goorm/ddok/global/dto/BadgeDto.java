@@ -19,4 +19,5 @@ public class BadgeDto {
 
     @Schema(description = "배지 티어", example = "bronze")
     private String tier;
+
 }
