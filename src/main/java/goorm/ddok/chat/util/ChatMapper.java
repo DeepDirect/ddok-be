@@ -10,13 +10,18 @@ import goorm.ddok.chat.dto.response.OtherUserResponse;
 import goorm.ddok.chat.dto.response.UserSimpleResponse;
 import goorm.ddok.chat.repository.ChatRepository;
 import goorm.ddok.chat.repository.ChatRoomMemberRepository;
+import goorm.ddok.global.exception.ErrorCode;
+import goorm.ddok.global.exception.GlobalException;
 import goorm.ddok.member.domain.User;
 import goorm.ddok.member.repository.UserRepository;
+import goorm.ddok.reputation.domain.UserReputation;
+import goorm.ddok.reputation.repository.UserReputationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,7 +34,7 @@ public class ChatMapper {
     private final ChatRepository chatRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final UserRepository userRepository;
-    private final RestClient.Builder builder;
+    private final UserReputationRepository userReputationRepository;
 
     public List<ChatRoomResponse> toChatRoomDtoList(List<ChatRoom> chatRooms, Long currentUserId) {
         return chatRooms.stream()
@@ -45,6 +50,8 @@ public class ChatMapper {
                 .isPinned(false) // TODO: 고정 기능 구현 시 실제 값으로 변경
                 .updatedAt(Optional.ofNullable(chatRoom.getLastMessageAt())
                         .orElse(chatRoom.getCreatedAt()));
+
+        System.out.println("* * * * toChatRoomDto currentUserId: " + currentUserId);
 
         // 채팅방 타입에 따라 다른 정보 설정
         if (chatRoom.getRoomType() == ChatRoomType.PRIVATE) {
@@ -63,49 +70,34 @@ public class ChatMapper {
     private void setPrivateChatInfo(ChatRoomResponse.ChatRoomResponseBuilder builder,
                                     ChatRoom chatRoom, Long currentUserId) {
         try {
-            // ChatRoomMember와 User 정보를 함께 조회
-            List<Object[]> membersWithUser = chatRoomMemberRepository.findAllByRoomIdWithUserInfo(chatRoom.getId());
+            User otherUser = chatRoomMemberRepository
+                    .findFirstByRoom_IdAndDeletedAtIsNullAndUser_IdNotOrderByCreatedAtAsc(
+                            chatRoom.getId(), currentUserId)
+                    .map(ChatRoomMember::getUser)
+                    .orElseThrow(() -> new GlobalException(ErrorCode.CHAT_ROOM_NOT_FOUND));
 
-            // 현재 사용자가 아닌 상대방 찾기
-            User otherUser = null;
-            for (Object[] result : membersWithUser) {
-                ChatRoomMember member = (ChatRoomMember) result[0];
-                User user = (User) result[1];
-
-                if (!member.getUserId().equals(currentUserId)) {
-                    otherUser = user;
-                    break;
-                }
-            }
-
-            if (otherUser == null) {
-                log.warn("개인 채팅방에서 상대방을 찾을 수 없습니다 - roomId: {}, currentUserId: {}",
-                        chatRoom.getId(), currentUserId);
-                builder.name("알 수 없는 사용자");
-                return;
-            }
-
-            // 상대방 정보로 채팅방 이름 설정 (이름이 없는 경우)
-            String roomName = chatRoom.getName() != null ? chatRoom.getName() : getNickname(otherUser);
+            String roomName = (chatRoom.getName() != null && !chatRoom.getName().isBlank())
+                    ? chatRoom.getName()
+                    : getNickname(otherUser);
 
             builder.name(roomName)
                     .otherUser(OtherUserResponse.builder()
                             .id(otherUser.getId())
                             .nickname(getNickname(otherUser))
                             .profileImage(getProfileImageUrl(otherUser))
+                            .temperature(getTemperature(otherUser))
                             .build());
 
+        } catch (GlobalException e) {
+            throw e;
         } catch (Exception e) {
+            // 예기치 못한 예외는 로깅 후 기본 값으로 처리
             log.error("개인 채팅 정보 설정 중 오류 발생 - roomId: {}", chatRoom.getId(), e);
-            builder.name("채팅방");
+            builder.name(chatRoom.getName() != null ? chatRoom.getName() : "채팅방");
         }
     }
 
-
-    // User 객체에서 프로필 이미지 URL 추출 (User 클래스 구조에 따라 수정 필요)
     private String getProfileImageUrl(User user) {
-        // User 클래스에 getProfileImage() 메서드가 있다고 가정
-        // 실제 User 클래스 구조에 맞게 수정 필요
         try {
             return user.getProfileImageUrl();
         } catch (Exception e) {
@@ -113,16 +105,19 @@ public class ChatMapper {
         }
     }
 
-    // User 객체에서 닉네임 추출 (User 클래스 구조에 따라 수정 필요)
     private String getNickname(User user) {
-        // User 클래스에 getNickname() 메서드가 있다고 가정
-        // 실제 User 클래스 구조에 맞게 수정 필요
         try {
             return user.getNickname();
         } catch (Exception e) {
             log.warn("닉네임 추출 실패 - userId: {}", user.getId());
             return "사용자" + user.getId();
         }
+    }
+
+    private BigDecimal getTemperature(User user) {
+        return userReputationRepository.findByUserId(user.getId())
+                .map(UserReputation::getTemperature)
+                .orElse(BigDecimal.valueOf(36.5));
     }
 
     // 그룹 채팅 정보 설정
@@ -166,7 +161,7 @@ public class ChatMapper {
                     .type(message.getContentType())
                     .content(content)
                     .createdAt(message.getCreatedAt())
-                    .senderId(message.getSenderId()) // 수정: User 엔티티가 아닌 senderId 직접 사용
+                    .senderId(message.getSender().getId())
                     .build());
         });
     }

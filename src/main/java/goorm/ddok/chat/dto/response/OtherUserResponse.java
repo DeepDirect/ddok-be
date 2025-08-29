@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -21,4 +23,7 @@ public class OtherUserResponse {
 
     @Schema(description = "프로필 이미지 URL")
     private String profileImage;
+
+    @Schema(description = "사용자 온도")
+    private BigDecimal temperature;
 }

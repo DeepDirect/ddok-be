@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
 
 @Data
 @Builder
@@ -24,4 +25,13 @@ public class PaginationResponse {
 
     @Schema(description = "전체 항목 수")
     private Long totalItems;
+
+    public static PaginationResponse of(Page<?> page) {
+        return PaginationResponse.builder()
+                .currentPage(page.getNumber())
+                .pageSize(page.getSize())
+                .totalPages(page.getTotalPages())
+                .totalItems(page.getTotalElements())
+                .build();
+    }
 }

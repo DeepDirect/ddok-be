@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "ㅊㅐ팅 목록 응답")
-public class ChatListResponseResponse {
+public class ChatListResponse {
 
     @Schema(description = "채팅방 목록")
     private List<ChatRoomResponse> chats;
