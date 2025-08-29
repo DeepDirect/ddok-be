@@ -2,6 +2,8 @@ package goorm.ddok.study.repository;
 
 import goorm.ddok.study.domain.StudyParticipant;
 import goorm.ddok.study.domain.StudyRecruitment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -24,5 +26,15 @@ public interface StudyParticipantRepository extends JpaRepository<StudyParticipa
 
     // 스터디 모집글 기준으로 참가자 전체 조회
     List<StudyParticipant> findByStudyRecruitment(StudyRecruitment study);
+
+
+    // 유저 기준 참여 스터디 조회 (Soft Delete 제외)
+    @Query("""
+           select p
+             from StudyParticipant p
+            where p.user.id = :userId
+              and p.deletedAt is null
+           """)
+    Page<StudyParticipant> findByUserId(@Param("userId") Long userId, Pageable pageable);
 
 }
