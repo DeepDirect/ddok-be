@@ -34,41 +34,41 @@ public class ProjectRecruitmentController {
     @Operation(
             summary = "프로젝트 모집 글 생성",
             description = """
-                새로운 프로젝트 모집글을 생성합니다. 요청은 Multipart/Form-Data 형식으로 전송해야 하며,
-                request 필드에는 JSON 요청 본문을, bannerImage 필드에는 배너 이미지를 포함할 수 있습니다.
-                배너 이미지를 null로 보낼 경우 기본 이미지가 자동 생성됩니다.
-                
-                - ONLINE 모드 -> 위치 정보 불필요
-                - OFFLINE 모드 -> 위치 정보 필수
-                """
+        새로운 프로젝트 모집글을 생성합니다. 요청은 Multipart/Form-Data 형식입니다.
+        - request: JSON (아래 예시 참고, Kakao road_address 매핑 LocationDto 허용)
+        - bannerImage: 선택 파일
+        
+        ONLINE 모드 -> location 생략
+        OFFLINE 모드 -> location 필수 (region1/2/3, roadName, main/subBuildingNo, zoneNo, latitude(y), longitude(x))
+        """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "프로젝트 생성 성공",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class),
-                            examples = @ExampleObject(value = """
-                {
-                  "status": 201,
-                  "message": "프로젝트 생성이 성공했습니다.",
-                  "data": {
-                    "projectId": 1,
-                    "userId": 10,
-                    "nickname": "고라니",
-                    "leaderPosition": "백엔드",
-                    "title": "구지라지",
-                    "teamStatus": "RECRUITING",
-                    "expectedStart": "2025-09-01",
-                    "expectedMonth": 3,
-                    "mode": "ONLINE",
-                    "location": null,
-                    "preferredAges": { "ageMin": 20, "ageMax": 30 },
-                    "capacity": 5,
-                    "bannerImageUrl": "https://cdn.example.com/images/project-banner.png",
-                    "traits": ["실행력 갑", "성실함"],
-                    "positions": ["백엔드", "프론트엔드", "디자이너"],
-                    "detail": "저희 정말 멋진 웹을 만들거에요~ 하고 싶죠?"
-                  }
-                }
-                """))),
+                            examples = @ExampleObject(name="성공 예시", value = """
+            {
+              "status": 201,
+              "message": "프로젝트 생성이 성공했습니다.",
+              "data": {
+                "projectId": 1,
+                "userId": 10,
+                "nickname": "고라니",
+                "leaderPosition": "백엔드",
+                "title": "구지라지",
+                "teamStatus": "RECRUITING",
+                "expectedStart": "2025-09-01",
+                "expectedMonth": 3,
+                "mode": "ONLINE",
+                "location": null,
+                "preferredAges": { "ageMin": 20, "ageMax": 30 },
+                "capacity": 5,
+                "bannerImageUrl": "https://cdn.example.com/images/project-banner.png",
+                "traits": ["실행력 갑", "성실함"],
+                "positions": ["백엔드", "프론트엔드", "디자이너"],
+                "detail": "저희 정말 멋진 웹을 만들거에요~ 하고 싶죠?"
+              }
+            }
+            """))),
             @ApiResponse(responseCode = "401", description = "인증 실패 (비로그인 사용자)",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class),
                             examples = @ExampleObject(value = """

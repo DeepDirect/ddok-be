@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "project_recruitment")
@@ -71,6 +72,18 @@ public class ProjectRecruitment {
     /** 프로젝트 진행 장소 (도로명 주소) */
     @Column(length = 50)
     private String roadName;
+
+    /** 프로젝트 진행 장소 (건물 번호) */
+    @Column(length = 16)
+    private String mainBuildingNo;
+
+    /** 프로젝트 진행 장소 (건물 부번호) */
+    @Column(length = 16)
+    private String subBuildingNo;
+
+    /** 프로젝트 진행 장소 (우편번호) */
+    @Column(length = 16)
+    private String zoneNo;
 
     /** 위도 (소수점 6자리) */
     @Column(precision = 9, scale = 6)
@@ -136,6 +149,32 @@ public class ProjectRecruitment {
     private void normalize() {
         if (title != null) title = title.trim();
         if (bannerImageUrl != null) bannerImageUrl = bannerImageUrl.trim();
+        if (roadName != null) roadName = roadName.trim();
+        if (region1depthName != null) region1depthName = region1depthName.trim();
+        if (region2depthName != null) region2depthName = region2depthName.trim();
+        if (region3depthName != null) region3depthName = region3depthName.trim();
+        if (mainBuildingNo != null) mainBuildingNo = mainBuildingNo.trim();
+        if (subBuildingNo != null) subBuildingNo = subBuildingNo.trim();
+        if (zoneNo != null) zoneNo = zoneNo.trim();
+    }
+
+    /** OFFLINE일 때 응답용 전체 도로명 주소 조립 */
+    public String fullRoadAddress() {
+        if (projectMode == ProjectMode.ONLINE) return "ONLINE";
+        if (roadName == null && region1depthName == null && region2depthName == null) return "-";
+
+        StringBuilder sb = new StringBuilder();
+        if (region1depthName != null) sb.append(region1depthName).append(" ");
+        if (region2depthName != null) sb.append(region2depthName).append(" ");
+        if (region3depthName != null) sb.append(region3depthName).append(" ");
+        if (roadName != null) sb.append(roadName).append(" ");
+
+        String main = Objects.toString(mainBuildingNo, "").trim();
+        String sub  = Objects.toString(subBuildingNo, "").trim();
+        if (!main.isEmpty() && !sub.isEmpty()) sb.append(main).append("-").append(sub);
+        else if (!main.isEmpty()) sb.append(main);
+
+        return sb.toString().trim();
     }
 
 

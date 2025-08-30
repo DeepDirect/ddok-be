@@ -3,6 +3,7 @@ package goorm.ddok.project.controller;
 import goorm.ddok.global.response.ApiResponseDto;
 import goorm.ddok.global.security.auth.CustomUserDetails;
 import goorm.ddok.project.dto.request.ProjectRecruitmentUpdateRequest;
+import goorm.ddok.project.dto.response.ProjectDetailResponse;
 import goorm.ddok.project.dto.response.ProjectEditPageResponse;
 import goorm.ddok.project.dto.response.ProjectUpdateResultResponse;
 import goorm.ddok.project.service.ProjectRecruitmentEditService;
@@ -36,7 +37,7 @@ public class ProjectRecruitmentEditController {
                             examples = @ExampleObject(value = """
                         {
                           "status": 200,
-                          "message": "수정하기 페이지 조회가 성공했습니다.",
+                          "message": "수정하기 페이지 조회애 성공했습니다.",
                           "data": {
                             "title": "구라라지 프로젝트",
                             "teamStatus": "RECRUITING",
@@ -72,11 +73,11 @@ public class ProjectRecruitmentEditController {
                         { "status": 404, "message": "프로젝트를 찾을 수 없습니다.", "data": null }""")))
     })
     @GetMapping("/{projectId}/edit")
-    public ResponseEntity<ApiResponseDto<ProjectEditPageResponse>> getEditPage(
+    public ResponseEntity<ApiResponseDto<ProjectDetailResponse>> getEditPage(
             @PathVariable Long projectId,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
-        ProjectEditPageResponse data = service.getEditPage(projectId, user);
+        ProjectDetailResponse data = service.getEditPage(projectId, user);
         return ResponseEntity.ok(ApiResponseDto.of(200, "수정하기 페이지 조회가 성공했습니다.", data));
     }
 

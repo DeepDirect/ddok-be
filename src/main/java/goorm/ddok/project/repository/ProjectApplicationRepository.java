@@ -65,7 +65,7 @@ public interface ProjectApplicationRepository extends JpaRepository<ProjectAppli
     boolean existsByUser_IdAndPosition_ProjectRecruitment_IdAndStatus(Long userId, Long projectId, ApplicationStatus status);
 
     // 특정 포지션 참조 지원 수
-    long countByPosition_Id(Long positionId);
+    int countByPosition_Id(Long positionId);
 
     // 프로젝트 참가자(멤버) 제외하고 ‘지원자 현황’ 만들 때 사용할 원본(필요시)
     @Query("""
