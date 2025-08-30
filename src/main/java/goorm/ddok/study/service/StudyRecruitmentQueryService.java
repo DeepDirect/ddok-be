@@ -1,27 +1,34 @@
 package goorm.ddok.study.service;
 
+import goorm.ddok.global.dto.AbandonBadgeDto;
+import goorm.ddok.global.dto.BadgeDto;
 import goorm.ddok.global.dto.PreferredAgesDto;
 import goorm.ddok.global.exception.ErrorCode;
 import goorm.ddok.global.exception.GlobalException;
 import goorm.ddok.global.security.auth.CustomUserDetails;
-import goorm.ddok.global.util.AddressNormalizer;
-import goorm.ddok.member.domain.User;
-import goorm.ddok.member.domain.UserPosition;
-import goorm.ddok.member.domain.UserPositionType;
-import goorm.ddok.reputation.domain.UserReputation;
-import goorm.ddok.reputation.repository.UserReputationRepository;
-import goorm.ddok.study.domain.*;
+import goorm.ddok.study.domain.ParticipantRole;
+import goorm.ddok.study.domain.StudyMode;
+import goorm.ddok.study.domain.StudyParticipant;
+import goorm.ddok.study.domain.StudyRecruitment;
 import goorm.ddok.study.dto.UserSummaryDto;
 import goorm.ddok.study.dto.response.StudyRecruitmentDetailResponse;
 import goorm.ddok.study.repository.StudyApplicationRepository;
 import goorm.ddok.study.repository.StudyParticipantRepository;
 import goorm.ddok.study.repository.StudyRecruitmentRepository;
+import goorm.ddok.member.domain.User;
+import goorm.ddok.member.domain.UserPosition;
+import goorm.ddok.member.domain.UserPositionType;
+import goorm.ddok.reputation.domain.UserReputation;
+import goorm.ddok.reputation.repository.UserReputationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,138 +40,124 @@ public class StudyRecruitmentQueryService {
     private final StudyApplicationRepository studyApplicationRepository;
     private final UserReputationRepository userReputationRepository;
 
-    /**
-     * 스터디 모집글 상세 조회
-     */
-    public StudyRecruitmentDetailResponse getStudyDetail(
-            Long studyId,
-            CustomUserDetails userDetails
-    ) {
-        // 1. 스터디 모집글 존재 여부 확인
+    /** 스터디 상세 조회 (수정페이지와 동일 스키마) */
+    public StudyRecruitmentDetailResponse getStudyDetail(Long studyId, CustomUserDetails userDetails) {
+        // 1) 소프트삭제 확인
         StudyRecruitment study = studyRecruitmentRepository.findById(studyId)
-                .orElseThrow(() -> new GlobalException(ErrorCode.RECRUITMENT_NOT_FOUND));
+                .orElseThrow(() -> new GlobalException(ErrorCode.STUDY_NOT_FOUND));
+        if (study.getDeletedAt() != null) throw new GlobalException(ErrorCode.STUDY_NOT_FOUND);
 
-        User currentUser = (userDetails != null) ? userDetails.getUser() : null;
+        User me = (userDetails != null) ? userDetails.getUser() : null;
 
-        // 2. 참여자 전체 조회 (리더 + 멤버)
-        List<StudyParticipant> participants = studyParticipantRepository.findByStudyRecruitment(study);
+        // 2) 참가자(리더+멤버)
+        List<StudyParticipant> all = studyParticipantRepository.findByStudyRecruitment(study);
 
-        // 3. 리더 조회
-        StudyParticipant leader = participants.stream()
+        // 3) 리더 필수
+        StudyParticipant leader = all.stream()
                 .filter(p -> p.getRole() == ParticipantRole.LEADER)
                 .findFirst()
                 .orElseThrow(() -> new GlobalException(ErrorCode.LEADER_NOT_FOUND));
 
-        // 4. 지원자 수 (모집글 단위, 확정 포함)
+        // 4) 멤버/지원자 수
+        List<StudyParticipant> members = all.stream()
+                .filter(p -> p.getRole() == ParticipantRole.MEMBER)
+                .toList();
+        int participantsCount = members.size();
         int applicantCount = (int) studyApplicationRepository.countByStudyRecruitment(study);
 
-        // 5. 확정 멤버 수 (리더 제외)
-        long memberCount = participants.stream()
-                .filter(p -> p.getRole() == ParticipantRole.MEMBER)
-                .count();
-
-        // 6. 총 참여자 수 (리더 + 멤버)
-        int participantsCount = (int) (memberCount + 1);
-
-        // 7. 리더 DTO
-        BigDecimal leaderTemp = userReputationRepository.findByUserId(leader.getUser().getId())
-                .map(UserReputation::getTemperature)
-                .orElse(BigDecimal.valueOf(36.5));
-        // TODO: 온도 로직 완성시 수정
-//                            .orElseThrow(() -> new GlobalException(ErrorCode.REPUTATION_NOT_FOUND));
-        UserSummaryDto leaderDto = toUserSummaryDto(leader, currentUser, leaderTemp);
-
-        // 8. 멤버 DTO 리스트 (리더 제외)
-        List<UserSummaryDto> memberDtos = participants.stream()
-                .filter(p -> p.getRole() == ParticipantRole.MEMBER)
-                .map(p -> {
-                    BigDecimal temp = userReputationRepository.findByUserId(p.getUser().getId())
-                            .map(UserReputation::getTemperature)
-                            .orElse(BigDecimal.valueOf(36.5));
-                    // TODO: 온도 로직 완성시 수정
-//                            .orElseThrow(() -> new GlobalException(ErrorCode.REPUTATION_NOT_FOUND));
-                    return toUserSummaryDto(p, currentUser, temp);
-                })
+        // 5) 리더/멤버 요약 (온도/뱃지 없으면 null)
+        UserSummaryDto leaderDto = toUserSummaryDto(leader, me);
+        List<UserSummaryDto> participantDtos = members.stream()
+                .sorted(Comparator.comparing(p -> Optional.ofNullable(p.getUser().getNickname()).orElse("")))
+                .map(p -> toUserSummaryDto(p, me))
                 .toList();
 
-        // 9. 응답 조립
+        // 6) 주소(ONLINE → null), 선호연령(0/0 → null)
+        String address = composeFullAddress(study);
+        PreferredAgesDto ages = (isZero(study.getAgeMin()) && isZero(study.getAgeMax()))
+                ? null
+                : new PreferredAgesDto(study.getAgeMin(), study.getAgeMax());
+
+        // 7) 응답
         return StudyRecruitmentDetailResponse.builder()
                 .studyId(study.getId())
                 .title(study.getTitle())
                 .studyType(study.getStudyType())
-                .IsMine(currentUser != null && study.getUser().getId().equals(currentUser.getId()))
-                .IsApplied(isApplied(currentUser, study))       // 지원 여부 (Application 기준)
-                .IsApproved(isApproved(currentUser, participants)) // 승인 여부 (Participant 기준)
+                .IsMine(me != null && Objects.equals(study.getUser().getId(), me.getId()))
                 .teamStatus(study.getTeamStatus())
                 .bannerImageUrl(study.getBannerImageUrl())
-                .traits(study.getTraits().stream().map(StudyRecruitmentTrait::getTraitName).toList())
+                .traits(study.getTraits().stream().map(t -> t.getTraitName()).toList())
                 .capacity(study.getCapacity())
-                .applicantCount(applicantCount)   // 지원자 수 (확정 포함)
-                .participantsCount(participantsCount) // 총 참여자 수 (리더 + 멤버)
+                .applicantCount(applicantCount)
                 .mode(study.getMode())
-                .address(resolveAddress(study))
-                .preferredAges(PreferredAgesDto.builder()
-                        .ageMin(study.getAgeMin())
-                        .ageMax(study.getAgeMax())
-                        .build())
+                .address(address)
+                .preferredAges(ages)
                 .expectedMonth(study.getExpectedMonths())
                 .startDate(study.getStartDate())
                 .detail(study.getContentMd())
                 .leader(leaderDto)
-                .participants(memberDtos)
+                .participants(participantDtos)
+                .participantsCount(participantsCount)
                 .build();
     }
 
-    /** 지원 여부 확인 (Application 기준) */
-    private boolean isApplied(User currentUser, StudyRecruitment study) {
-        if (currentUser == null) return false;
-        return studyApplicationRepository.findByUser_IdAndStudyRecruitment_Id(
-                currentUser.getId(), study.getId()
-        ).isPresent();
+    /* ===== helpers ===== */
+
+    private boolean isZero(Integer v) { return v == null || v == 0; }
+
+    /** 오프라인: r1 r2 r3 road main-sub, 온라인: null */
+    private String composeFullAddress(StudyRecruitment s) {
+        if (s.getMode() == StudyMode.ONLINE) return null;
+
+        String r1 = Optional.ofNullable(s.getRegion1DepthName()).orElse("");
+        String r2 = Optional.ofNullable(s.getRegion2DepthName()).orElse("");
+        String r3 = Optional.ofNullable(s.getRegion3DepthName()).orElse("");
+        String road = Optional.ofNullable(s.getRoadName()).orElse("");
+        String main = Optional.ofNullable(s.getMainBuildingNo()).orElse("");
+        String sub  = Optional.ofNullable(s.getSubBuildingNo()).orElse("");
+
+        StringBuilder sb = new StringBuilder();
+        if (!r1.isBlank()) sb.append(r1).append(" ");
+        if (!r2.isBlank()) sb.append(r2).append(" ");
+        if (!r3.isBlank()) sb.append(r3).append(" ");
+        if (!road.isBlank()) sb.append(road).append(" ");
+        if (!main.isBlank() && !sub.isBlank()) sb.append(main).append("-").append(sub);
+        else if (!main.isBlank()) sb.append(main);
+
+        String addr = sb.toString().trim().replaceAll("\\s+", " ");
+        return addr.isBlank() ? null : addr;
     }
 
-    /** 승인 여부 확인 (Participant 기준) */
-    private boolean isApproved(User currentUser, List<StudyParticipant> participants) {
-        if (currentUser == null) return false;
-        return participants.stream()
-                .anyMatch(p -> p.getUser().getId().equals(currentUser.getId())
-                        && p.getRole() == ParticipantRole.MEMBER);
-    }
+    /** 요약 변환: 온도/뱃지 “없으면 null” */
+    private UserSummaryDto toUserSummaryDto(StudyParticipant participant, User me) {
+        User u = participant.getUser();
 
-    /** 주소 변환 */
-    private String resolveAddress(StudyRecruitment study) {
-        if (study.getMode() == StudyMode.ONLINE) {
-            return null;
-        }
-        if (study.getRegion1DepthName() != null && study.getRegion2DepthName() != null) {
-            return AddressNormalizer.buildAddress(
-                    study.getRegion1DepthName(),
-                    study.getRegion2DepthName()
-            );
-        }
-        throw new GlobalException(ErrorCode.INVALID_LOCATION);
-    }
-
-    /** UserSummaryDto 변환 */
-    private UserSummaryDto toUserSummaryDto(StudyParticipant participant, User currentUser, BigDecimal temperature) {
-        User user = participant.getUser();
-
-        // 메인 포지션(PRIMARY)
-        String mainPosition = user.getPositions().stream()
+        String mainPosition = u.getPositions().stream()
                 .filter(pos -> pos.getType() == UserPositionType.PRIMARY)
                 .map(UserPosition::getPositionName)
                 .findFirst()
                 .orElse(null);
 
+        // 온도: 없으면 null
+        BigDecimal temperature = userReputationRepository.findByUserId(u.getId())
+                .map(UserReputation::getTemperature)
+                .orElse(null);
+
+        // 뱃지: 아직 연동 전 → null
+        BadgeDto mainBadge = null;
+        AbandonBadgeDto abandonBadge = null;
+
         return UserSummaryDto.builder()
-                .userId(user.getId())
-                .nickname(user.getNickname())
-                .profileImageUrl(user.getProfileImageUrl())
+                .userId(u.getId())
+                .nickname(u.getNickname())
+                .profileImageUrl(u.getProfileImageUrl())
                 .mainPosition(mainPosition)
-                .temperature(temperature)
-                .IsMine(currentUser != null && user.getId().equals(currentUser.getId()))
-                .chatRoomId(null)         // TODO: 채팅 연동 시 교체
-                .dmRequestPending(false)  // TODO: DM 연동 시 교체
+                .mainBadge(mainBadge)          // null
+                .abandonBadge(abandonBadge)    // null
+                .temperature(temperature)      // null 허용
+                .IsMine(me != null && Objects.equals(me.getId(), u.getId()))
+                .chatRoomId(null)
+                .dmRequestPending(false)
                 .build();
     }
 }

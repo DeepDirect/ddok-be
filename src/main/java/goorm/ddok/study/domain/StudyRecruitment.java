@@ -53,7 +53,7 @@ public class StudyRecruitment {
     @Column(name = "mode", nullable = false, length = 20)
     private StudyMode mode;
 
-    /** 지역 정보 (오프라인일 경우 필수) */
+    /** 카카오 road_address/region 필드 */
     @Column(name = "region1_depth_name", length = 50)
     private String region1DepthName;
 
@@ -63,16 +63,25 @@ public class StudyRecruitment {
     @Column(name = "region3_depth_name", length = 50)
     private String region3DepthName;
 
-    @Column(name = "road_name", length = 50)
+    @Column(name = "road_name", length = 100)
     private String roadName;
 
-    @Column(name = "latitude")
+    @Column(name = "main_building_no", length = 20)
+    private String mainBuildingNo;
+
+    @Column(name = "sub_building_no", length = 20)
+    private String subBuildingNo;
+
+    @Column(name = "zone_no", length = 20)
+    private String zoneNo;
+
+    @Column(name = "latitude", precision = 14, scale = 10)
     private BigDecimal latitude;
 
-    @Column(name = "longitude")
+    @Column(name = "longitude", precision = 14, scale = 10)
     private BigDecimal longitude;
 
-    /** 나이 제한 */
+    /** 나이 제한 (무관: 0/0) */
     @Column(name = "age_min")
     private Integer ageMin;
 
@@ -93,7 +102,7 @@ public class StudyRecruitment {
     private StudyType studyType;
 
     /** 본문 */
-    @Column(name = "content_md", nullable = false)
+    @Column(name = "content_md", nullable = false, columnDefinition = "TEXT")
     private String contentMd;
 
     /** 시간 정보 */

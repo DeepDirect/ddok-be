@@ -1,28 +1,26 @@
 package goorm.ddok.study.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import goorm.ddok.global.dto.LocationDto;
 import goorm.ddok.global.dto.PreferredAgesDto;
 import goorm.ddok.study.domain.StudyMode;
 import goorm.ddok.study.domain.StudyType;
 import goorm.ddok.study.domain.TeamStatus;
 import goorm.ddok.study.dto.UserSummaryDto;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@JsonInclude(JsonInclude.Include.ALWAYS)
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Schema(
         name = "StudyRecruitmentDetailResponse",
-        description = "스터디 모집글 상세 조회 응답 DTO",
+        description = "스터디 모집글 상세/수정페이지 조회/수정저장 공통 응답 DTO",
         example = """
         {
           "studyId": 2,
@@ -37,7 +35,7 @@ import java.util.List;
           "capacity": 4,
           "applicantCount": 6,
           "mode": "ONLINE",
-          "address": "ONLINE",
+          "address": null,
           "preferredAges": { "ageMin": 20, "ageMax": 30 },
           "expectedMonth": 3,
           "startDate": "2025-09-10",
@@ -47,6 +45,8 @@ import java.util.List;
             "nickname": "개구라",
             "profileImageUrl": "https://cdn.example.com/images/user101.png",
             "mainPosition": "풀스택",
+            "mainBadge": null,
+            "abandonBadge": null,
             "temperature": 36.5,
             "isMine": false,
             "chatRoomId": null,
@@ -58,6 +58,8 @@ import java.util.List;
               "nickname": "개고루",
               "profileImageUrl": "https://cdn.example.com/images/user201.png",
               "mainPosition": "백엔드",
+              "mainBadge": null,
+              "abandonBadge": null,
               "temperature": 36.5,
               "isMine": false,
               "chatRoomId": null,
@@ -79,14 +81,9 @@ public class StudyRecruitmentDetailResponse {
     @Schema(description = "스터디 유형", example = "JOB_INTERVIEW")
     private StudyType studyType;
 
+    @JsonProperty("isMine")
     @Schema(description = "내가 작성자인지 여부", example = "true")
     private boolean IsMine;
-
-    @Schema(description = "지원 여부", example = "false")
-    private boolean IsApplied;
-
-    @Schema(description = "승인 여부", example = "false")
-    private boolean IsApproved;
 
     @Schema(description = "팀 상태", example = "RECRUITING")
     private TeamStatus teamStatus;
@@ -106,10 +103,10 @@ public class StudyRecruitmentDetailResponse {
     @Schema(description = "진행 방식", example = "ONLINE")
     private StudyMode mode;
 
-    @Schema(description = "주소")
+    @Schema(description = "주소 (ONLINE이면 null)")
     private String address;
 
-    @Schema(description = "선호 연령대")
+    @Schema(description = "선호 연령대 (무관 시 null)")
     private PreferredAgesDto preferredAges;
 
     @Schema(description = "예상 진행 개월 수", example = "3")
@@ -124,9 +121,9 @@ public class StudyRecruitmentDetailResponse {
     @Schema(description = "리더 정보")
     private UserSummaryDto leader;
 
-    @Schema(description = "참여자 리스트")
+    @Schema(description = "참여자 리스트(리더 제외)")
     private List<UserSummaryDto> participants;
 
-    @Schema(description = "참여자 수", example = "3")
+    @Schema(description = "참여자 수(리더 제외)", example = "3")
     private Integer participantsCount;
 }

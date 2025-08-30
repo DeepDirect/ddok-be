@@ -15,4 +15,5 @@ public interface StudyRecruitmentRepository extends JpaRepository<StudyRecruitme
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update StudyRecruitment s set s.deletedAt = :now where s.id = :id and s.deletedAt is null")
     int softDeleteById(@Param("id") Long id, @Param("now") Instant now);
+
 }

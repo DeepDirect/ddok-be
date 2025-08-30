@@ -25,4 +25,6 @@ public interface StudyParticipantRepository extends JpaRepository<StudyParticipa
     // 스터디 모집글 기준으로 참가자 전체 조회
     List<StudyParticipant> findByStudyRecruitment(StudyRecruitment study);
 
+    List<StudyParticipant> findByStudyRecruitment_IdAndDeletedAtIsNull(Long studyId);
+
 }
