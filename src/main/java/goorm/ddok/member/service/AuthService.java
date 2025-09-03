@@ -130,7 +130,6 @@ public class AuthService {
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
         refreshTokenService.save(user.getId(), refreshToken);
-
         long ttlMs  = jwtTokenProvider.getRefreshTokenExpireMillis();
         long ttlSec = Math.max(1, ttlMs / 1000);
 
@@ -149,12 +148,7 @@ public class AuthService {
 
         LocationResponse location = null;
         if (user.getLocation() != null) {
-            var loc = user.getLocation();
-            BigDecimal lat = (loc.getActivityLatitude()  != null) ? loc.getActivityLatitude()  : null;
-            BigDecimal lon = (loc.getActivityLongitude() != null) ? loc.getActivityLongitude() : null;
-
-            String address = loc.getRoadName();
-            location = new LocationResponse(lat, lon, address);
+            location = toLocationResponse(user.getLocation()); // CHANGED
         }
 
 
@@ -372,20 +366,32 @@ public class AuthService {
         }
     }
 
-    private UserLocation saveUserLocation(User user, LocationRequest locationRequest) {
-        UserLocation userLocation = userLocationRepository.findByUserId(user.getId())
+    private UserLocation saveUserLocation(User user, LocationRequest r) {
+        UserLocation ul = userLocationRepository.findByUserId(user.getId())
                 .orElse(UserLocation.builder().user(user).build());
 
-        userLocation = userLocation.toBuilder()
-                .roadName(locationRequest.getAddress())
-                .activityLatitude(locationRequest.getLatitude() == null ? null
-                        : new java.math.BigDecimal(String.format(java.util.Locale.US, "%.6f", locationRequest.getLatitude())))
-                .activityLongitude(locationRequest.getLongitude() == null ? null
-                        : new java.math.BigDecimal(String.format(java.util.Locale.US, "%.6f", locationRequest.getLongitude())))
+        ul = ul.toBuilder()
+                .region1DepthName(nullIfBlank(r.getRegion1depthName()))
+                .region2DepthName(nullIfBlank(r.getRegion2depthName()))
+                .region3DepthName(nullIfBlank(r.getRegion3depthName()))
+                .roadName(nullIfBlank(r.getRoadName()))
+                .mainBuildingNo(nullIfBlank(r.getMainBuildingNo()))
+                .subBuildingNo(nullIfBlank(r.getSubBuildingNo()))
+                .zoneNo(nullIfBlank(r.getZoneNo()))
+                .activityLatitude(toBigDecimal6(r.getLatitude()))
+                .activityLongitude(toBigDecimal6(r.getLongitude()))
                 .build();
 
-        return userLocationRepository.save(userLocation);
+        return userLocationRepository.save(ul);
     }
+    private String nullIfBlank(String s) {
+        return (s == null || s.isBlank()) ? null : s.trim();
+    }
+    private java.math.BigDecimal toBigDecimal6(Double v) {
+        if (v == null) return null;
+        return new java.math.BigDecimal(String.format(java.util.Locale.US, "%.6f", v));
+    }
+
 
     private void saveUserTraits(User user, List<String> traits) {
         if (traits != null && !traits.isEmpty()) {
@@ -416,15 +422,62 @@ public class AuthService {
         userActivityRepository.save(userActivity);
     }
 
-    private PreferenceResponse buildPreferenceResponse(User user, UserLocation userLocation, PreferenceRequest request) {
-        LocationResponse locationResponse = null;
-        if (userLocation != null) {
-            BigDecimal lat = (userLocation.getActivityLatitude() != null)
-                    ? userLocation.getActivityLatitude() : null;
-            BigDecimal lon = (userLocation.getActivityLongitude() != null)
-                    ? userLocation.getActivityLongitude() : null;
-            locationResponse = new LocationResponse(lat, lon, userLocation.getRoadName());
+
+    private LocationResponse toLocationResponse(UserLocation ul) {
+        if (ul == null) return null;
+
+        String address = composeFullAddress(
+                ul.getRegion1DepthName(),
+                ul.getRegion2DepthName(),
+                ul.getRegion3DepthName(),
+                ul.getRoadName(),
+                ul.getMainBuildingNo(),
+                ul.getSubBuildingNo()
+        ); // CHANGED: 조립 주소 (없으면 null)
+
+        return new LocationResponse(
+                address,
+                ul.getRegion1DepthName(),
+                ul.getRegion2DepthName(),
+                ul.getRegion3DepthName(),
+                ul.getRoadName(),
+                ul.getMainBuildingNo(),
+                ul.getSubBuildingNo(),
+                ul.getZoneNo(),
+                ul.getActivityLatitude(),
+                ul.getActivityLongitude()
+        );
+    }
+
+    private String composeFullAddress(String r1, String r2, String r3, String road, String main, String sub) {
+        StringBuilder sb = new StringBuilder();
+        if (has(r1)) sb.append(r1).append(" ");
+        if (has(r2)) sb.append(r2).append(" ");
+        if (has(r3)) sb.append(r3).append(" ");
+        if (has(road)) sb.append(road).append(" ");
+        if (has(main)) {
+            sb.append(main);
+            if (has(sub)) sb.append("-").append(sub);
         }
+        String s = sb.toString().trim().replaceAll("\\s+", " ");
+        return s.isEmpty() ? null : s;
+    }
+
+    private boolean has(String s) { return s != null && !s.isBlank(); }
+
+    private java.math.BigDecimal toScale(Double v) {
+        if (v == null) return null;
+        return new java.math.BigDecimal(String.format(java.util.Locale.US, "%.6f", v));
+    }
+
+    private String safeTrim(String v) { return (v == null) ? null : v.trim(); }
+
+    /* ---------------------------
+     * buildPreferenceResponse: 위치 변환 수정
+     * --------------------------- */
+    private PreferenceResponse buildPreferenceResponse(User user, UserLocation userLocation, PreferenceRequest request) {
+        // CHANGED: toLocationResponse 사용
+        LocationResponse locationResponse = (userLocation != null) ? toLocationResponse(userLocation) : null; // CHANGED
 
         ActiveHoursResponse activeHoursResponse = ActiveHoursResponse.builder()
                 .start(request.getActiveHours().getStart())
@@ -435,12 +488,11 @@ public class AuthService {
                 .mainPosition(request.getMainPosition())
                 .subPosition(request.getSubPosition())
                 .techStacks(request.getTechStacks())
-                .location(locationResponse)
+                .location(locationResponse) // CHANGED
                 .traits(request.getTraits())
                 .birthDate(request.getBirthDate())
                 .activeHours(activeHoursResponse)
                 .build();
-
 
         return PreferenceResponse.builder()
                 .id(user.getId())

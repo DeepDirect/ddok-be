@@ -1,6 +1,7 @@
 package goorm.ddok.member.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -39,6 +40,14 @@ public class UserLocation {
 
     @Column(name = "road_name", length = 50)
     private String roadName;
+
+    @Schema(description = "건물 본번 (main_building_no)",
+            example = "11")
+    private String mainBuildingNo;
+
+    @Schema(description = "건물 부번 (sub_building_no)",
+            example = "17")
+    private String subBuildingNo;
 
     @Column(name = "zone_no", length = 50)
     private String zoneNo;

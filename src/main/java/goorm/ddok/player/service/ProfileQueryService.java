@@ -125,10 +125,27 @@ public class ProfileQueryService {
 
     private LocationResponse toLocation(UserLocation location) {
         if (location == null) return null;
+
+        String address = composeFullAddress(
+                location.getRegion1DepthName(),
+                location.getRegion2DepthName(),
+                location.getRegion3DepthName(),
+                location.getRoadName(),
+                location.getMainBuildingNo(),
+                location.getSubBuildingNo()
+        );
+
         return new LocationResponse(
+                address,
+                location.getRegion1DepthName(),
+                location.getRegion2DepthName(),
+                location.getRegion3DepthName(),
+                location.getRoadName(),
+                location.getMainBuildingNo(),
+                location.getSubBuildingNo(),
+                location.getZoneNo(),
                 location.getActivityLatitude(),
-                location.getActivityLongitude(),
-                location.getRoadName()
+                location.getActivityLongitude()
         );
     }
 
@@ -144,5 +161,20 @@ public class ProfileQueryService {
     private AbandonBadgeDto toAbandonBadgeDto(User user) {
         // TODO: 탈주 배지 조회 로직 구현
         return new AbandonBadgeDto(true, 5);
+    }
+
+    private String composeFullAddress(String r1, String r2, String r3,
+                                      String road, String main, String sub) {
+        StringBuilder sb = new StringBuilder();
+        if (r1 != null && !r1.isBlank()) sb.append(r1).append(" ");
+        if (r2 != null && !r2.isBlank()) sb.append(r2).append(" ");
+        if (r3 != null && !r3.isBlank()) sb.append(r3).append(" ");
+        if (road != null && !road.isBlank()) sb.append(road).append(" ");
+        if (main != null && !main.isBlank()) {
+            sb.append(main);
+            if (sub != null && !sub.isBlank()) sb.append("-").append(sub);
+        }
+        String s = sb.toString().trim().replaceAll("\\s+", " ");
+        return s.isBlank() ? null : s;
     }
 }

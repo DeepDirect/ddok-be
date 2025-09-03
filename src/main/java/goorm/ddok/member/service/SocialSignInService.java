@@ -66,10 +66,28 @@ public class SocialSignInService {
         LocationResponse location = null;
         if (user.getLocation() != null) {
             var loc = user.getLocation();
-            var lat = (loc.getActivityLatitude()  != null) ? loc.getActivityLatitude()  : null;
-            var lon = (loc.getActivityLongitude() != null) ? loc.getActivityLongitude() : null;
-            String address = loc.getRoadName();
-            location = new LocationResponse(lat, lon, address);
+
+            String address = composeFullAddress(
+                    loc.getRegion1DepthName(),
+                    loc.getRegion2DepthName(),
+                    loc.getRegion3DepthName(),
+                    loc.getRoadName(),
+                    loc.getMainBuildingNo(),
+                    loc.getSubBuildingNo()
+            );
+
+            location = new LocationResponse(
+                    address,
+                    loc.getRegion1DepthName(),
+                    loc.getRegion2DepthName(),
+                    loc.getRegion3DepthName(),
+                    loc.getRoadName(),
+                    loc.getMainBuildingNo(),
+                    loc.getSubBuildingNo(),
+                    loc.getZoneNo(),
+                    loc.getActivityLatitude(),
+                    loc.getActivityLongitude()
+            );
         }
 
         // 8) 사용자 DTO 생성
@@ -77,5 +95,20 @@ public class SocialSignInService {
         SignInUserResponse userDto = new SignInUserResponse(user, isPreferences, location);
 
         return new SignInResponse(accessToken, userDto);
+    }
+
+    private String composeFullAddress(String r1, String r2, String r3,
+                                      String road, String main, String sub) {
+        StringBuilder sb = new StringBuilder();
+        if (r1 != null && !r1.isBlank()) sb.append(r1).append(" ");
+        if (r2 != null && !r2.isBlank()) sb.append(r2).append(" ");
+        if (r3 != null && !r3.isBlank()) sb.append(r3).append(" ");
+        if (road != null && !road.isBlank()) sb.append(road).append(" ");
+        if (main != null && !main.isBlank()) {
+            sb.append(main);
+            if (sub != null && !sub.isBlank()) sb.append("-").append(sub);
+        }
+        String s = sb.toString().trim().replaceAll("\\s+", " ");
+        return s.isBlank() ? null : s;
     }
 }
