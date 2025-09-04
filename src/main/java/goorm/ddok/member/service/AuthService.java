@@ -2,6 +2,7 @@ package goorm.ddok.member.service;
 
 import goorm.ddok.global.exception.ErrorCode;
 import goorm.ddok.global.exception.GlobalException;
+import goorm.ddok.global.security.auth.CustomUserDetails;
 import goorm.ddok.global.security.jwt.JwtTokenProvider;
 import goorm.ddok.global.security.token.ReauthTokenService;
 import goorm.ddok.global.security.token.RefreshTokenService;
@@ -119,6 +120,10 @@ public class AuthService {
     public SignInResponse signIn(SignInRequest request, HttpServletResponse response) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new GlobalException(ErrorCode.WRONG_PASSWORD));
+
+        if (user.isDeleted()) {
+            throw new GlobalException(ErrorCode.USER_NOT_FOUND);
+        }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new GlobalException(ErrorCode.WRONG_PASSWORD);
@@ -456,5 +461,17 @@ public class AuthService {
                 .isPreferences(true)
                 .preferences(preferences)
                 .build();
+    }
+
+    public void deleteAccount(CustomUserDetails me) {
+        User user = userRepository.findByIdAndDeletedAtIsNull(me.getUser().getId())
+                .orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.isDeleted()) {
+            throw new GlobalException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        user.softDelete();
+        userRepository.save(user);
     }
 }

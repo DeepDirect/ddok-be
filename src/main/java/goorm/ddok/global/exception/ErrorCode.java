@@ -33,6 +33,7 @@ public enum ErrorCode {
     INVALID_STUDY_TYPE(HttpStatus.BAD_REQUEST, "스터디 유형은 필수이며 올바른 값이어야 합니다."),
     INVALID_MAP_BOUNDS(HttpStatus.BAD_REQUEST, "잘못된 지도 경계값입니다."),
     REQUIRED_PARAMETER_MISSING(HttpStatus.BAD_REQUEST, "필수 파라미터가 누락되었습니다."),
+    POSITION_REQUIRED(HttpStatus.BAD_REQUEST, "지원 포지션을 선택해야 합니다."),
 
     // 401 UNAUTHORIZED
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
@@ -43,7 +44,6 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다."),
     WRONG_PASSWORD(HttpStatus.UNAUTHORIZED, "아이디 혹은 비밀번호가 일치하지 않습니다."),
     SOCIAL_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "카카오 로그인에 실패했습니다"),
-    POSITION_REQUIRED(HttpStatus.BAD_REQUEST, "지원 포지션을 선택해야 합니다."),
 
 
     // 403 FORBIDDEN

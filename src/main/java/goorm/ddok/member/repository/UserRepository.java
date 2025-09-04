@@ -83,4 +83,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("swLng") BigDecimal swLng,
             @Param("neLng") BigDecimal neLng
     );
+
+    // === 추가: "삭제되지 않은" 사용자만 대상으로 하는 안전 메서드들 ===
+    Optional<User> findByIdAndDeletedAtIsNull(Long id);
+
+    Optional<User> findByEmailAndDeletedAtIsNull(String email);
+
+    boolean existsByNicknameAndIdNotAndDeletedAtIsNull(String nickname, Long id);
+
+    boolean existsByPhoneNumberAndIdNotAndDeletedAtIsNull(String phoneNumber, Long id);
 }

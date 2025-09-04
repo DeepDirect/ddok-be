@@ -159,4 +159,16 @@ public class User {
         return decade + "대";
     }
 
+    @Column
+    private Instant deletedAt; // ← 추가: 탈퇴(소프트 삭제) 시각
+
+    // 소프트 딜리트 헬퍼
+    public void softDelete() {
+        this.deletedAt = Instant.now();
+    }
+
+    public boolean isDeleted() {
+        return this.deletedAt != null;
+    }
+
 }
