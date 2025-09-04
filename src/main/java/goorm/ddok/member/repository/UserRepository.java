@@ -92,4 +92,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByNicknameAndIdNotAndDeletedAtIsNull(String nickname, Long id);
 
     boolean existsByPhoneNumberAndIdNotAndDeletedAtIsNull(String phoneNumber, Long id);
+
+    boolean existsByEmailAndDeletedAtIsNull(String email);
+    boolean existsByPhoneNumberAndDeletedAtIsNull(String phoneNumber);
+    boolean existsByNicknameAndDeletedAtIsNull(String nickname);
+
+    // 신규 추가: 이메일 + 이름 조회 시 탈퇴 제외
+    Optional<User> findByEmailAndUsernameAndDeletedAtIsNull(String email, String username);
 }
