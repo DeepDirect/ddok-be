@@ -86,17 +86,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // === 추가: "삭제되지 않은" 사용자만 대상으로 하는 안전 메서드들 ===
     Optional<User> findByIdAndDeletedAtIsNull(Long id);
-
-    Optional<User> findByEmailAndDeletedAtIsNull(String email);
-
-    boolean existsByNicknameAndIdNotAndDeletedAtIsNull(String nickname, Long id);
-
-    boolean existsByPhoneNumberAndIdNotAndDeletedAtIsNull(String phoneNumber, Long id);
-
-    boolean existsByEmailAndDeletedAtIsNull(String email);
-    boolean existsByPhoneNumberAndDeletedAtIsNull(String phoneNumber);
-    boolean existsByNicknameAndDeletedAtIsNull(String nickname);
-
-    // 신규 추가: 이메일 + 이름 조회 시 탈퇴 제외
-    Optional<User> findByEmailAndUsernameAndDeletedAtIsNull(String email, String username);
 }
