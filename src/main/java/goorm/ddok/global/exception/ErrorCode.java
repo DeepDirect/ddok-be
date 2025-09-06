@@ -53,8 +53,10 @@ public enum ErrorCode {
     INVALID_FILE(HttpStatus.BAD_REQUEST, "부적절한 파일입니다."),
     FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "파일 크기는 5MB를 넘을 수 없습니다."),
     FILE_UPLOAD_FAILED(HttpStatus.BAD_REQUEST, "파일 업로드에 실패하였습니다."),
+    INVALID_TEAM_TYPE(HttpStatus.BAD_REQUEST,"잘못된 팀 타입입니다."),
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "리소스를 찾을 수 없습니다."),
     NOT_SUPPORT_CATEGORY(HttpStatus.BAD_REQUEST, "지원하지 않는 카테고리입니다."),
+
 
     // 401 UNAUTHORIZED
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
@@ -76,6 +78,7 @@ public enum ErrorCode {
     NOT_CHAT_MEMBER(HttpStatus.FORBIDDEN, "채팅방에 참여하지 않은 사용자입니다."),
     FORBIDDEN_ACTION(HttpStatus.FORBIDDEN, "리더는 참여 신청을 할 수 없습니다."),
     REAUTH_USER_MISMATCH(HttpStatus.FORBIDDEN, "재인증 사용자 정보가 일치하지 않습니다."),
+    FORBIDDEN_TEAM_ACCESS(HttpStatus.FORBIDDEN, "팀에 소속되지 않은 사용자는 접근할 수 없습니다."),
 
 
     // 404 NOT FOUND
