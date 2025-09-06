@@ -1,6 +1,7 @@
 package goorm.ddok.member.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import goorm.ddok.badge.domain.UserBadge;
 import goorm.ddok.reputation.domain.UserReputation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Past;
@@ -11,6 +12,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Entity
@@ -131,6 +134,18 @@ public class User {
     @JsonIgnore
     private UserReputation reputation;
 
+    @OneToMany(
+            mappedBy = "user",
+            fetch = FetchType.LAZY,
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE},
+            orphanRemoval = true
+    )
+    @ToString.Exclude
+    @JsonIgnore
+    @Builder.Default
+    private List<UserBadge> badges = new ArrayList<>();
+
+
 
     public User(String username, String nickname, String email, String phoneNumber, String password, String profileImageUrl) {
         this.username = username;
@@ -157,6 +172,14 @@ public class User {
 
         int decade = (age / 10) * 10;
         return decade + "대";
+    }
+
+    public void addBadge(UserBadge badge) {
+        badges.add(badge);
+    }
+
+    public void removeBadge(UserBadge badge) {
+        badge.softDelete();
     }
 
 }

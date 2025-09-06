@@ -1,5 +1,8 @@
 package goorm.ddok.global.dto;
 
+import goorm.ddok.badge.domain.BadgeTier;
+import goorm.ddok.badge.domain.BadgeType;
+import goorm.ddok.badge.domain.UserBadge;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,12 +15,19 @@ import lombok.NoArgsConstructor;
 @Builder
 @Schema(description = "배지 정보 DTO")
 public class BadgeDto {
-    // TODO: 추후 배지 타입/티어 ENUM 정의 시 타입 변경
 
     @Schema(description = "배지 타입", example = "login")
-    private String type;
+    private BadgeType type;
 
     @Schema(description = "배지 티어", example = "bronze")
-    private String tier;
+    private BadgeTier tier;
+
+    public static BadgeDto from(UserBadge badge, BadgeTier tier) {
+        if (badge == null) return null;
+        return BadgeDto.builder()
+                .type(badge.getBadgeType())
+                .tier(tier)
+                .build();
+    }
 
 }

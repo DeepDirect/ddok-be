@@ -1,5 +1,9 @@
 package goorm.ddok.player.service;
 
+import goorm.ddok.badge.domain.BadgeTier;
+import goorm.ddok.badge.domain.BadgeTierRule;
+import goorm.ddok.badge.domain.BadgeType;
+import goorm.ddok.badge.repository.BadgeTierRuleRepository;
 import goorm.ddok.global.dto.AbandonBadgeDto;
 import goorm.ddok.global.dto.BadgeDto;
 import goorm.ddok.global.exception.ErrorCode;
@@ -30,16 +34,13 @@ public class ProfileQueryService {
     private static final Logger log = LoggerFactory.getLogger(ProfileQueryService.class);
     private final UserRepository userRepository;
     private final UserPortfolioRepository userPortfolioRepository;
-    private final UserTraitRepository userTraitRepository;
-    private final UserPositionRepository userPositionRepository;
+    private final BadgeTierRuleRepository badgeTierRuleRepository;
 
     public ProfileDetailResponse getProfile(Long targetUserId, Long loginUserId) {
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_FOUND));
 
         boolean isMine = targetUserId.equals(loginUserId);
-        log.info("🔑 targetUserId={}, loginUserId={}", targetUserId, loginUserId);
-
 
         // 프로필 공개 여부 확인
         if (!isMine && !user.isPublic()) {
@@ -129,16 +130,37 @@ public class ProfileQueryService {
     }
 
     private List<BadgeDto> toBadgeDto(User user) {
-        // TODO: User 엔티티에 뱃지 매핑된 엔티티 있으면 거기서 가져오기
-        // 지금은 임시 데이터로 세팅
-        return List.of(
-                new BadgeDto("login", "bronze"),
-                new BadgeDto("complete", "silver")
-        );
+        return user.getBadges().stream()
+                .filter(badge -> badge.getDeletedAt() == null && isGoodBadge(badge.getBadgeType()))
+                .map(badge -> {
+                    BadgeTier tier = badgeTierRuleRepository
+                            .findTopByBadgeTypeAndRequiredCntLessThanEqualOrderByRequiredCntDesc(
+                                    badge.getBadgeType(), badge.getTotalCnt()
+                            )
+                            .map(BadgeTierRule::getTier)
+                            .orElse(BadgeTier.bronze);
+                    return BadgeDto.builder()
+                            .type(badge.getBadgeType())
+                            .tier(tier)
+                            .build();
+                })
+                .toList();
     }
 
     private AbandonBadgeDto toAbandonBadgeDto(User user) {
-        // TODO: 탈주 배지 조회 로직 구현
-        return new AbandonBadgeDto(true, 5);
+        return user.getBadges().stream()
+                .filter(badge -> badge.getBadgeType() == BadgeType.abandon && badge.getDeletedAt() == null)
+                .findFirst()
+                .map(AbandonBadgeDto::from)
+                .orElse(AbandonBadgeDto.builder()
+                        .IsGranted(false)
+                        .count(0)
+                        .build());
+    }
+
+    private boolean isGoodBadge(BadgeType type) {
+        return type == BadgeType.complete ||
+                type == BadgeType.leader_complete ||
+                type == BadgeType.login;
     }
 }
