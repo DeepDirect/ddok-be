@@ -58,4 +58,16 @@ public class ProjectApplication {
     @LastModifiedDate
     @Column(nullable = false)
     private Instant updatedAt;
+
+    public void approve() {
+        this.status = ApplicationStatus.APPROVED;
+    }
+
+    public void reject() {
+        this.status = ApplicationStatus.REJECTED;
+    }
+
+    public boolean isPending() {
+        return this.status == ApplicationStatus.PENDING;
+    }
 }

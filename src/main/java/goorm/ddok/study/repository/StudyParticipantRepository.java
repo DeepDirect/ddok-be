@@ -38,4 +38,8 @@ public interface StudyParticipantRepository extends JpaRepository<StudyParticipa
               and p.studyRecruitment.teamStatus <> goorm.ddok.study.domain.TeamStatus.RECRUITING
            """)
     Page<StudyParticipant> findByUserIdAndNotRecruiting(@Param("userId") Long userId, Pageable pageable);
+
+    // 스터디 모집글 기준 현재 참가자 수 (Soft Delete 제외)
+    long countByStudyRecruitment_IdAndDeletedAtIsNull(Long studyId);
+
 }

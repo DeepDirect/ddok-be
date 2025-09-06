@@ -46,4 +46,16 @@ public class StudyApplication {
     @LastModifiedDate
     @Column(nullable = false)
     private Instant updatedAt;
+
+    public void approve() {
+        this.applicationStatus = ApplicationStatus.APPROVED;
+    }
+
+    public void reject() {
+        this.applicationStatus = ApplicationStatus.REJECTED;
+    }
+
+    public boolean isPending() {
+        return this.applicationStatus == ApplicationStatus.PENDING;
+    }
 }

@@ -50,4 +50,7 @@ public interface ProjectParticipantRepository extends JpaRepository<ProjectParti
             goorm.ddok.project.domain.TeamStatus status,
             Pageable pageable
     );
+
+    /** 프로젝트 전체 참가자 수 (Soft Delete 제외) */
+    long countByPosition_ProjectRecruitment_IdAndDeletedAtIsNull(Long projectId);
 }
