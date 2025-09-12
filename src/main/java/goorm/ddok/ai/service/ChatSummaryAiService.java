@@ -36,18 +36,18 @@ public class ChatSummaryAiService {
     public ChatSummaryResponse summarize(Long roomId, User me, ChatSummaryRequest req) {
         if (me == null) throw new GlobalException(ErrorCode.UNAUTHORIZED);
         if (req.getFromMessageId() > req.getToMessageId()) {
-            throw new GlobalException(ErrorCode.BAD_REQUEST);
+            throw new GlobalException(ErrorCode.INVALID_CHAT_RANGE);
         }
 
         // 방 멤버 권한 확인
         boolean member = chatRoomMemberRepository
                 .existsByRoom_IdAndUser_IdAndDeletedAtIsNull(roomId, me.getId());
-        if (!member) throw new GlobalException(ErrorCode.FORBIDDEN);
+        if (!member) throw new GlobalException(ErrorCode.NOT_CHAT_MEMBER);
 
         // 메시지 범위 로드
         List<ChatMessage> all = chatMessageRepository
                 .findByRoom_IdAndIdBetweenOrderById(roomId, req.getFromMessageId(), req.getToMessageId());
-        if (all.isEmpty()) throw new GlobalException(ErrorCode.NOT_FOUND);
+        if (all.isEmpty()) throw new GlobalException(ErrorCode.CHAT_MESSAGE_INVALID);
 
         // TEXT만, id 오름차순, 최대 N개
         List<ChatMessage> texts = all.stream()

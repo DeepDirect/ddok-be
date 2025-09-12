@@ -72,7 +72,7 @@ public enum ErrorCode {
     INVALID_RATING(HttpStatus.BAD_REQUEST,"평점이 올바르지 않습니다."),
     CHAT_MESSAGE_INVALID(HttpStatus.BAD_REQUEST, "메세지 내용이 없습니다."),
     RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "현재 모집 중이 아닙니다."),
-
+    INVALID_CHAT_RANGE(HttpStatus.BAD_REQUEST,"채팅 범위가 적절하지 않습니다."),
 
     // 401 UNAUTHORIZED
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
