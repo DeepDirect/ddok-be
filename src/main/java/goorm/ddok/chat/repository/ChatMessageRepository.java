@@ -54,4 +54,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     Page<MessageView> pageViewsByRoomAndKeyword(@Param("room") ChatRoom room,
                                                 @Param("keyword") String keyword,
                                                 Pageable pageable);
+
+    List<ChatMessage> findByRoom_IdAndIdBetweenOrderById(Long roomId, Long fromId, Long toId);
 }
