@@ -52,8 +52,18 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
            and user_id = :userId
          order by id desc
          limit 1
-        """, nativeQuery = true)
+    """, nativeQuery = true)
     Optional<ChatRoomMember> findLatestIncludingDeleted(@Param("roomId") Long roomId,
                                                         @Param("userId") Long userId);
 
+    @Query("""
+          select m from ChatRoomMember m
+          where m.room.id = :roomId
+            and m.deletedAt is null
+            and m.user.id <> :senderId
+        """)
+    List<ChatRoomMember> findActiveMembersExcludingSender(@Param("roomId") Long roomId,
+                                                          @Param("senderId") Long senderId);
+
 }
+

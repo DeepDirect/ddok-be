@@ -47,6 +47,7 @@ public class ChatMapper {
         ChatRoomResponse.ChatRoomResponseBuilder builder = ChatRoomResponse.builder()
                 .roomId(chatRoom.getId())
                 .roomType(chatRoom.getRoomType())
+                .hasUnreadMessages(chatRepository.hasUnreadByTime(chatRoom.getId(), currentUserId))
                 .isPinned(false) // TODO: 고정 기능 구현 시 실제 값으로 변경
                 .updatedAt(Optional.ofNullable(chatRoom.getLastMessageAt())
                         .orElse(chatRoom.getCreatedAt()));

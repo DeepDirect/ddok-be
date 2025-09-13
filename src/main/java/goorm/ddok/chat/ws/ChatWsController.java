@@ -1,9 +1,12 @@
 package goorm.ddok.chat.ws;
 
 import goorm.ddok.chat.domain.ChatContentType;
+import goorm.ddok.chat.domain.ChatRoomMember;
 import goorm.ddok.chat.dto.request.ChatMessageRequest;
 import goorm.ddok.chat.dto.response.ChatMessageResponse;
+import goorm.ddok.chat.repository.ChatRoomMemberRepository;
 import goorm.ddok.chat.service.ChatMessageService;
+import goorm.ddok.chat.service.ChatNotificationService;
 import goorm.ddok.global.exception.ErrorCode;
 import goorm.ddok.global.exception.GlobalException;
 import goorm.ddok.member.domain.User;
@@ -14,6 +17,7 @@ import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -24,6 +28,7 @@ public class ChatWsController {
     private final ChatMessageService chatMessageService;
     private final SimpMessagingTemplate messagingTemplate;
     private final UserRepository userRepository;
+    private final ChatNotificationService chatNotificationService;
 
     /**
      * 클라 SEND: /pub/chats/{roomId}/send
@@ -47,6 +52,8 @@ public class ChatWsController {
         ChatMessageResponse saved = chatMessageService.sendMessage(userId, roomId, payload);
 
         messagingTemplate.convertAndSend("/sub/chats/" + roomId, saved);
+
+        chatNotificationService.notifyNewMessage(saved);
     }
 
     @MessageMapping("/chats/{roomId}/enter")

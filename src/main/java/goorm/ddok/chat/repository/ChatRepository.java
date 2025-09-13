@@ -23,7 +23,7 @@ public interface ChatRepository extends JpaRepository<ChatRoom, Long> {
     @Query("""
         SELECT crm FROM ChatRoomMember crm
         WHERE crm.room.id = :roomId
-        AND crm.user.id = :roomId
+        AND crm.user.id = :userId
         AND crm.deletedAt IS NULL
         """)
     Optional<ChatRoomMember> findMembershipByRoomIdAndUserId(@Param("roomId") Long roomId, @Param("userId") Long userId);
@@ -115,4 +115,18 @@ public interface ChatRepository extends JpaRepository<ChatRoom, Long> {
     // team id로 채팅방 조회
     Optional<ChatRoom> findByTeam_Id(Long teamId);
     boolean existsByTeam(Team team);
+
+    // 미읽음 메세지 여부
+    @Query("""
+        SELECT (r.lastMessageAt IS NOT NULL AND
+               (lm.createdAt IS NULL OR lm.createdAt < r.lastMessageAt))
+        FROM ChatRoom r
+        JOIN ChatRoomMember cm
+          ON cm.room.id = r.id AND cm.user.id = :userId
+        LEFT JOIN ChatMessage lm
+          ON lm.id = cm.lastReadMessageId
+        WHERE r.id = :roomId
+    """)
+    Boolean hasUnreadByTime(@Param("roomId") Long roomId,
+                            @Param("userId") Long userId);
 }

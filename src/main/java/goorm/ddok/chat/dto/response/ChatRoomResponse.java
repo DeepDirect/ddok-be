@@ -49,6 +49,9 @@ public class ChatRoomResponse {
     @Schema(description = "마지막 메시지")
     private LastMessageResponse lastMessage;
 
+    @Schema(description = "안 읽은 메시지 존재 여부", example = "true")
+    private Boolean hasUnreadMessages;
+
     @Schema(description = "마지막 업데이트 시간")
     private Instant updatedAt;
 }

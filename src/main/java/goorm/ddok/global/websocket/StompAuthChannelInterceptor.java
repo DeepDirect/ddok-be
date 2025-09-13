@@ -23,9 +23,7 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
     private final JwtTokenProvider jwtTokenProvider;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
 
-    // /sub/chats/{roomId}
     private static final Pattern SUB_ROOM_PATTERN = Pattern.compile("^/sub/chats/(\\d+)$");
-    // /pub/chats/{roomId}/..., /pub/chats/{roomId} 둘 다 허용
     private static final Pattern PUB_ROOM_PATTERN = Pattern.compile("^/pub/chats/(\\d+)(?:/.*)?$");
 
     @Override
@@ -36,7 +34,6 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
         switch (cmd) {
             case CONNECT -> {
-                // CONNECT에서만 Authorization 요구
                 String authHeader = acc.getFirstNativeHeader("Authorization");
                 if (!StringUtils.hasText(authHeader) || !authHeader.startsWith("Bearer ")) {
                     throw new GlobalException(ErrorCode.UNAUTHORIZED);
@@ -47,43 +44,45 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
                     throw new GlobalException(ErrorCode.UNAUTHORIZED);
                 }
                 acc.getSessionAttributes().put("userId", userId);
+                acc.setUser(new StompPrincipal(String.valueOf(userId)));
             }
-
             case SUBSCRIBE -> {
                 Long userId = (Long) acc.getSessionAttributes().get("userId");
                 if (userId == null) throw new GlobalException(ErrorCode.UNAUTHORIZED);
 
                 String dest = acc.getDestination();
-                Long roomId = extractRoomId(dest, SUB_ROOM_PATTERN);
+                if (!StringUtils.hasText(dest)) break;
 
+                if (dest.startsWith("/user/")) break;
+
+                Long roomId = extractId(dest, SUB_ROOM_PATTERN);
                 if (roomId != null && !isActiveMember(roomId, userId)) {
                     throw new GlobalException(ErrorCode.FORBIDDEN);
                 }
             }
-
             case SEND -> {
                 Long userId = (Long) acc.getSessionAttributes().get("userId");
                 if (userId == null) throw new GlobalException(ErrorCode.UNAUTHORIZED);
 
                 String dest = acc.getDestination();
-                Long roomId = extractRoomId(dest, PUB_ROOM_PATTERN);
-
+                Long roomId = extractId(dest, PUB_ROOM_PATTERN);
                 if (roomId != null && !isActiveMember(roomId, userId)) {
                     throw new GlobalException(ErrorCode.FORBIDDEN);
                 }
             }
-
-            default -> { /* no-op */ }
+            default -> { }
         }
 
         return message;
     }
 
-    private Long extractRoomId(String destination, Pattern pattern) {
+    private Long extractId(String destination, Pattern pattern) {
         if (!StringUtils.hasText(destination)) return null;
         Matcher m = pattern.matcher(destination);
         if (m.matches()) {
-            try { return Long.parseLong(m.group(1)); } catch (NumberFormatException ignored) {}
+            try {
+                return Long.parseLong(m.group(1));
+            } catch (NumberFormatException ignored) { }
         }
         return null;
     }
