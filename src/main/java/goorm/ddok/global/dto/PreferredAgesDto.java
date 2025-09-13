@@ -16,4 +16,12 @@ public class PreferredAgesDto {
 
     @Schema(description = "최대 연령 (무관 시 null)", example = "30")
     private Integer ageMax;
+
+    public static PreferredAgesDto of(Integer min, Integer max) {
+        if (min == null && max == null) return null;
+        return PreferredAgesDto.builder()
+                .ageMin(min)
+                .ageMax(max)
+                .build();
+    }
 }

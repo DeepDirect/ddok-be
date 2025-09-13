@@ -145,13 +145,11 @@ public class ProjectRecruitmentQueryService {
         LocationDto location = buildLocationForRead(project);
 
         // 8) 선호 연령 (0/0이면 null)
-        PreferredAgesDto ages =
-                (isZero(project.getAgeMin()) && isZero(project.getAgeMax()))
-                        ? null
-                        : PreferredAgesDto.builder()
-                        .ageMin(project.getAgeMin())
-                        .ageMax(project.getAgeMax())
-                        .build();
+        PreferredAgesDto ages = PreferredAgesDto.of(
+                isZero(project.getAgeMin()) ? null : project.getAgeMin(),
+                isZero(project.getAgeMax()) ? null : project.getAgeMax()
+        );
+
 
         Optional<Team> team = teamRepository.findByRecruitmentIdAndType(project.getId(), TeamType.PROJECT);
 

@@ -156,7 +156,7 @@ public class StudyRecruitmentService {
                 .expectedMonth(study.getExpectedMonths())
                 .mode(study.getMode())
                 .location(location)
-                .preferredAges(PreferredAgesDto.builder().ageMin(study.getAgeMin()).ageMax(study.getAgeMax()).build())
+                .preferredAges(PreferredAgesDto.of(study.getAgeMin(), study.getAgeMax()))
                 .capacity(study.getCapacity())
                 .bannerImageUrl(study.getBannerImageUrl())
                 .traits(study.getTraits().stream().map(StudyRecruitmentTrait::getTraitName).toList())

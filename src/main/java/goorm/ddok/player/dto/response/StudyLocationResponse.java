@@ -45,12 +45,19 @@ public class StudyLocationResponse {
     private BigDecimal longitude;
 
     public static StudyLocationResponse from(StudyRecruitment study) {
-        String region1 = study.getRegion1depthName() != null ? study.getRegion1depthName() : "";
-        String region2 = study.getRegion2depthName() != null ? study.getRegion2depthName() : "";
-        String address = normalizeRegion1(region1) + " " + region2;
+        if (study == null) return null;
+
+        String r1 = study.getRegion1depthName() != null ? study.getRegion1depthName().trim() : "";
+        String r2 = study.getRegion2depthName() != null ? study.getRegion2depthName().trim() : "";
+
+        StringBuilder sb = new StringBuilder();
+        if (!r1.isEmpty()) sb.append(r1).append(" ");
+        if (!r2.isEmpty()) sb.append(r2);
+
+        String address = sb.toString().trim().replaceAll("\\s+", " ");
 
         return StudyLocationResponse.builder()
-                .address(address)
+                .address(address.isBlank() ? null : address)
                 .region1depthName(study.getRegion1depthName())
                 .region2depthName(study.getRegion2depthName())
                 .region3depthName(study.getRegion3depthName())
@@ -63,11 +70,4 @@ public class StudyLocationResponse {
                 .build();
     }
 
-    private static String normalizeRegion1(String region1) {
-        return region1.replace("특별시", "")
-                .replace("광역시", "")
-                .replace("자치시", "")
-                .replace("도", "")
-                .trim();
-    }
 }

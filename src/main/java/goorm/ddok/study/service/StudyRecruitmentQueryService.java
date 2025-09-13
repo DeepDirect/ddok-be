@@ -84,13 +84,10 @@ public class StudyRecruitmentQueryService {
 
         // 6) 주소(online → null), 선호연령(0/0 → null)
         LocationDto location = buildLocationForRead(study);
-        PreferredAgesDto ages =
-                (isZero(study.getAgeMin()) && isZero(study.getAgeMax()))
-                        ? null
-                        : PreferredAgesDto.builder()
-                        .ageMin(study.getAgeMin())
-                        .ageMax(study.getAgeMax())
-                        .build();
+        PreferredAgesDto ages = PreferredAgesDto.of(
+                study.getAgeMin(),
+                study.getAgeMax()
+        );
 
 
         boolean isApplied = false;

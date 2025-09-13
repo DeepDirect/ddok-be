@@ -23,9 +23,16 @@ import lombok.NoArgsConstructor;
           "title": "구지라지 프로젝트",
           "teamStatus": "CLOSED",
           "location": {
-            "latitude": 37.5665,
-            "longitude": 126.9780,
-            "address": "서울특별시 강남구 테헤란로…"
+          "address": "전북 익산시",
+            "region1depthName": "전북",
+            "region2depthName": "익산시",
+            "region3depthName": "부송동",
+            "roadName": "망산길",
+            "mainBuildingNo": "11",
+            "subBuildingNo": "17",
+            "zoneNo": "54547",
+            "latitude": 35.976749396987046,
+            "longitude": 126.99599512792346
           },
           "period": {
             "start": "2025-08-01",

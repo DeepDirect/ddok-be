@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Getter
 @NoArgsConstructor
@@ -44,12 +45,19 @@ public class ProjectLocationResponse {
     private BigDecimal longitude;
 
     public static ProjectLocationResponse from(ProjectRecruitment project) {
-        String region1 = project.getRegion1depthName() != null ? project.getRegion1depthName() : "";
-        String region2 = project.getRegion2depthName() != null ? project.getRegion2depthName() : "";
-        String address = normalizeRegion1(region1) + " " + region2;
+        if (project == null) return null;
+
+        String r1 = Optional.ofNullable(project.getRegion1depthName()).orElse("").trim();
+        String r2 = Optional.ofNullable(project.getRegion2depthName()).orElse("").trim();
+
+        StringBuilder sb = new StringBuilder();
+        if (!r1.isEmpty()) sb.append(r1).append(" ");
+        if (!r2.isEmpty()) sb.append(r2);
+
+        String address = sb.toString().trim().replaceAll("\\s+", " ");
 
         return ProjectLocationResponse.builder()
-                .address(address)
+                .address(address.isBlank() ? null : address)
                 .region1depthName(project.getRegion1depthName())
                 .region2depthName(project.getRegion2depthName())
                 .region3depthName(project.getRegion3depthName())
@@ -60,14 +68,6 @@ public class ProjectLocationResponse {
                 .latitude(project.getLatitude())
                 .longitude(project.getLongitude())
                 .build();
-    }
-
-    private static String normalizeRegion1(String region1) {
-        return region1.replace("특별시", "")
-                .replace("광역시", "")
-                .replace("자치시", "")
-                .replace("도", "")
-                .trim();
     }
 
 }

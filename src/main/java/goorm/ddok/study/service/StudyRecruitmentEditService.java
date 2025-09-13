@@ -179,9 +179,10 @@ public class StudyRecruitmentEditService {
                 .map(p -> toUserSummaryDto(p, me))
                 .toList();
 
-        PreferredAgesDto ages = (isZero(study.getAgeMin()) && isZero(study.getAgeMax()))
-                ? null
-                : new PreferredAgesDto(study.getAgeMin(), study.getAgeMax());
+        PreferredAgesDto ages = PreferredAgesDto.of(
+                study.getAgeMin(),
+                study.getAgeMax()
+        );
 
         LocationDto location = buildLocationForRead(study);
 
