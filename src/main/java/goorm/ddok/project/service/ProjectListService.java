@@ -200,10 +200,7 @@ public class ProjectListService {
                 .capacity(p.getCapacity())
                 .mode(p.getProjectMode())
                 .address(address)
-                .preferredAges(PreferredAgesDto.builder()
-                        .ageMin(p.getAgeMin())
-                        .ageMax(p.getAgeMax())
-                        .build())
+                .preferredAges(PreferredAgesDto.of(p.getAgeMin(), p.getAgeMax()))
                 .expectedMonth(p.getExpectedMonths())
                 .startDate(p.getStartDate())
                 .build();

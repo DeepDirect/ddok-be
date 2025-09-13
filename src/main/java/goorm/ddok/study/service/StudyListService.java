@@ -271,10 +271,10 @@ public class StudyListService {
                 .mode(s.getMode())
                 .address(address)
                 .studyType(s.getStudyType())
-                .preferredAges(PreferredAgesDto.builder()
-                        .ageMin(s.getAgeMin())
-                        .ageMax(s.getAgeMax())
-                        .build())
+                .preferredAges(PreferredAgesDto.of(
+                        (s.getAgeMin() != null && s.getAgeMin() == 0) ? null : s.getAgeMin(),
+                        (s.getAgeMax() != null && s.getAgeMax() == 0) ? null : s.getAgeMax()
+                ))
                 .expectedMonth(s.getExpectedMonths())
                 .startDate(s.getStartDate())
                 .build();

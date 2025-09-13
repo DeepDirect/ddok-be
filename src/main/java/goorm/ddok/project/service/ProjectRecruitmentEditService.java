@@ -128,9 +128,10 @@ public class ProjectRecruitmentEditService {
                 .map(p -> toUserSummaryDto(p, me.getUser()))
                 .toList();
 
-        PreferredAgesDto ages = (pr.getAgeMin() == 0 && pr.getAgeMax() == 0)
-                ? null
-                : PreferredAgesDto.builder().ageMin(pr.getAgeMin()).ageMax(pr.getAgeMax()).build();
+        PreferredAgesDto ages = PreferredAgesDto.of(
+                (pr.getAgeMin() == 0 ? null : pr.getAgeMin()),
+                (pr.getAgeMax() == 0 ? null : pr.getAgeMax())
+        );
 
         return ProjectDetailResponse.builder()
                 .projectId(pr.getId())
@@ -450,10 +451,10 @@ public class ProjectRecruitmentEditService {
         boolean isMine = meId != null && Objects.equals(pr.getUser().getId(), meId);
 
         // 무관(0/0)일 때 null
-        PreferredAgesDto prefAges =
-                (pr.getAgeMin() == 0 && pr.getAgeMax() == 0)
-                        ? null
-                        : new PreferredAgesDto(pr.getAgeMin(), pr.getAgeMax());
+        PreferredAgesDto prefAges = PreferredAgesDto.of(
+                (pr.getAgeMin() == 0 ? null : pr.getAgeMin()),
+                (pr.getAgeMax() == 0 ? null : pr.getAgeMax())
+        );
 
         // 리더/참여자 조회
         List<ProjectParticipant> participants =

@@ -691,10 +691,7 @@ public class MapService {
                 .capacity(row.getCapacity())
                 .mode(row.getMode().toString())
                 .address(row.getAddress())
-                .preferredAges(PreferredAgesDto.builder()
-                        .ageMin(row.getAgeMin())
-                        .ageMax(row.getAgeMax())
-                        .build())
+                .preferredAges(PreferredAgesDto.of(row.getAgeMin(), row.getAgeMax()))
                 .expectedMonth(row.getExpectedMonth())
                 .startDate(row.getStartDate())
                 .build();
@@ -714,10 +711,7 @@ public class MapService {
                 .capacity(row.getCapacity())
                 .mode(row.getMode().toString())
                 .address(row.getAddress())
-                .preferredAges(PreferredAgesDto.builder()
-                        .ageMin(row.getAgeMin())
-                        .ageMax(row.getAgeMax())
-                        .build())
+                .preferredAges(PreferredAgesDto.of(row.getAgeMin(), row.getAgeMax()))
                 .expectedMonth(row.getExpectedMonth())
                 .startDate(row.getStartDate())
                 .build();
