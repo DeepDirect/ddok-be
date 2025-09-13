@@ -55,5 +55,17 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
                                                 @Param("keyword") String keyword,
                                                 Pageable pageable);
 
-    List<ChatMessage> findByRoom_IdAndIdBetweenOrderById(Long roomId, Long fromId, Long toId);
+    @Query("""
+    select m
+      from ChatMessage m
+     where m.room.id = :roomId
+       and m.deletedAt is null
+       and m.id between :fromId and :toId
+     order by m.id asc
+""")
+    List<ChatMessage> findByRoom_IdAndIdBetweenAndDeletedAtIsNullOrderByIdAsc(
+            @Param("roomId") Long roomId,
+            @Param("fromId") Long fromId,
+            @Param("toId") Long toId
+    );
 }

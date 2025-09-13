@@ -95,3 +95,15 @@ coolsms:
     key: ${COOLSMS_KEY}
     secret: ${COOLSMS_SECRET}
     number: ${COOLSMS_NUMBER}
+
+ai:
+  provider: clova
+  maxTokens: 800
+  temperature: 0.7
+  topP: 0.8
+  topK: 0
+  clova:
+    mode: stream
+    streamUrl: https://clovastudio.stream.ntruss.com
+    model: HCX-005
+    studio-api-key: ${CLOVA_STUDIO_API_KEY}
