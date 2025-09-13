@@ -59,8 +59,9 @@ public class PlayerProfileService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        // 서브 2개 초과
-        if (subs.size() > 2) throw new GlobalException(ErrorCode.PROFILE_SECONDARY_POSITION_TOO_MANY);
+        if (subsRaw.size() != 2) {
+            throw new GlobalException(ErrorCode.PROFILE_POSITION_TOTAL_MUST_BE_TWO);
+        }
 
         // 메인과 중복 여부
         if (subs.stream().anyMatch(s -> s.equalsIgnoreCase(main))) {
@@ -100,8 +101,10 @@ public class PlayerProfileService {
         List<String> traits = (req.getTraits() == null) ? List.of()
                 : req.getTraits().stream().map(this::trimToNull).filter(Objects::nonNull).distinct().toList();
 
-        // (옵션) 유효성 강화가 필요하면 여기서 TRAIT_NAME_INVALID 던질 수 있음
-        // if (traits.stream().anyMatch(t -> t.length() > 64)) throw new GlobalException(ErrorCode.TRAIT_NAME_INVALID);
+        if (traits.isEmpty() || traits.size() > 5) {
+            // 새 에러코드 필요
+            throw new GlobalException(ErrorCode.TRAIT_COUNT_OUT_OF_RANGE);
+        }
 
         for (String t : traits) user.getTraits().add(UserTrait.builder().user(user).traitName(t).build());
 

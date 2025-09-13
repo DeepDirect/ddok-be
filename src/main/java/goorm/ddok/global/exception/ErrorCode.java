@@ -77,7 +77,8 @@ public enum ErrorCode {
     INVALID_RATING(HttpStatus.BAD_REQUEST,"평점이 올바르지 않습니다."),
     CHAT_MESSAGE_INVALID(HttpStatus.BAD_REQUEST, "메세지 내용이 없습니다."),
     RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "현재 모집 중이 아닙니다."),
-
+    PROFILE_POSITION_TOTAL_MUST_BE_TWO(HttpStatus.BAD_REQUEST,"관심 포지션은 반드시 2개여야 합니다."),
+    TRAIT_COUNT_OUT_OF_RANGE(HttpStatus.BAD_REQUEST,"특성(traits)은 최소 1개, 최대 5개까지 입력 가능합니다."),
 
     // 401 UNAUTHORIZED
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
